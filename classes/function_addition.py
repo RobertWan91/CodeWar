@@ -1,31 +1,29 @@
 import functools
+from collections import defaultdict
+
+
 class FuncAdd:
-    fn_list = {}
+    fn_list = defaultdict(list)
 
     def __init__(self, fn):
         self.fn = fn
-
-        if self.fn.__name__ not in FuncAdd.fn_list:
-            FuncAdd.fn_list[self.fn.__name__] = [self.fn]
-        else:
-            FuncAdd.fn_list[self.fn.__name__].append(self.fn)
+        FuncAdd.fn_list.append(self.fn)
         functools.update_wrapper(self, fn)
 
     def __call__(self, *args, **kwargs):
 
-        if FuncAdd.fn_list[self.fn.__name__] is None:
+        if self.fn.__name__ not in FuncAdd.fn_list[self.fn.__name__]:
             raise NameError
         else:
             return tuple(sub_fn(*args, **kwargs) for sub_fn in FuncAdd.fn_list[self.fn.__name__])
 
     @classmethod
     def delete(cls, fn):
-        cls.fn_list[fn.__name__] = None
+        del cls.fn_list[fn.__name__]
 
     @classmethod
     def clear(cls):
-        for key, value in cls.fn_list.items():
-            cls.fn_list[key] = None
+        cls.fn_list = defaultdict(list)
 
 
 if __name__ == '__main__':

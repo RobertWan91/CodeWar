@@ -18,4 +18,11 @@ class FSM(object):
 
     def run_fsm(self, start, sequence):
         # return tuple: (final_state, final_state_output, path)
-        pass
+        path = [start]
+        mid = start
+        while sequence:
+            state_num = sequence.pop(0)
+            next_state = self.role_dict[mid][state_num]
+            path.append(next_state)
+            mid = next_state
+        return mid, self.role_dict[mid]['output'], path
