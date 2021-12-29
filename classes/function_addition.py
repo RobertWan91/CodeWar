@@ -7,12 +7,12 @@ class FuncAdd:
 
     def __init__(self, fn):
         self.fn = fn
-        FuncAdd.fn_list.append(self.fn)
+        FuncAdd.fn_list[fn.__name__].append(self.fn)
         functools.update_wrapper(self, fn)
 
     def __call__(self, *args, **kwargs):
 
-        if self.fn.__name__ not in FuncAdd.fn_list[self.fn.__name__]:
+        if self.fn.__name__ not in FuncAdd.fn_list:
             raise NameError
         else:
             return tuple(sub_fn(*args, **kwargs) for sub_fn in FuncAdd.fn_list[self.fn.__name__])
