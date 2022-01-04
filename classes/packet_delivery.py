@@ -15,7 +15,7 @@ The error message given when "DimensionsOutOfBoundError" is raised should always
 where variable is length, width, height or weight; value is the out-of-bounds value and lower/upper are lower/upper bound on the variable, respectively.
 """
 
-
+import weakref
 class DimensionsOutOfBoundError(Exception):
     def __init__(self, attr, val, min_val, max_val):
         self.str = "Package %s==%d out of bounds, should be: %d < %s <= %d" % (attr, val, min_val, attr, max_val)
@@ -33,14 +33,20 @@ class AttributeValue:
 
     def __set__(self, instance, value):
         if self.lower_bound < value <= self.upper_bound:
-            self.data[instance] = value
+            self.data[id(instance)] = (weakref.ref(instance, self._finalise_instance), value)
         else:
             raise DimensionsOutOfBoundError(self.attr_name, value, self.lower_bound, self.upper_bound)
 
     def __get__(self, instance, owner_class):
         if instance is None:
             return self
-        return self.data[instance]
+        return self.data.get(id(instance))[1]
+
+    def _finalise_instance(self, weakref):
+        for key, value in self.data.items():
+            if value[0] == weakref:
+                del self.data[key]
+                break
 
 
 class Package:
