@@ -24,36 +24,33 @@ class DimensionsOutOfBoundError(Exception):
         return self.str
 
 
-class AttributeValue:
-    def __init__(self, attr_name, lower_bound, upper_bound):
+class AttributeValue:  # Descriptor -> @property, classmethod, staticmethod
+    def __init__(self, lower_bound, upper_bound):
         self.data = {}
-        self.attr_name = attr_name
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
 
+    def __set_name__(self, owner_class, property_name):
+        self.property_name = property_name
+
     def __set__(self, instance, value):
         if self.lower_bound < value <= self.upper_bound:
-            self.data[id(instance)] = (weakref.ref(instance, self._finalise_instance), value)
+            instance.__dict__[self.property_name] = value
         else:
-            raise DimensionsOutOfBoundError(self.attr_name, value, self.lower_bound, self.upper_bound)
+            raise DimensionsOutOfBoundError(self.property_name, value, self.lower_bound, self.upper_bound)
 
     def __get__(self, instance, owner_class):
         if instance is None:
             return self
-        return self.data.get(id(instance))[1]
-
-    def _finalise_instance(self, weakref):
-        for key, value in self.data.items():
-            if value[0] == weakref:
-                del self.data[key]
-                break
+        else:
+            return instance.__dict__.get(self.property_name, None)
 
 
 class Package:
-    length = AttributeValue('length', 0, 350)
-    width = AttributeValue('width', 0, 300)
-    height = AttributeValue('height', 0, 150)
-    weight = AttributeValue('weight', 0, 40)
+    length = AttributeValue(0, 350)
+    width = AttributeValue(0, 300)
+    height = AttributeValue(0, 150)
+    weight = AttributeValue(0, 40)
 
     def __init__(self, *args):
         self.length, self.width, self.height, self.weight = args
